@@ -14,8 +14,6 @@ import {
   readConversationId,
   startNewConversation,
 } from "@/lib/chat-persistence";
-import { WEBMCP_CHAT_OPEN } from "@/lib/embed-protocol";
-import { hostOrigin } from "@/lib/host-origin";
 
 function ChatPanel({
   labelledBy,
@@ -107,14 +105,6 @@ export function ChatWidget() {
   const discardedIdRef = useRef<string | null>(null);
 
   useEffect(() => {
-    if (window.parent === window) {
-      return;
-    }
-
-    window.parent.postMessage({ type: WEBMCP_CHAT_OPEN, open }, hostOrigin);
-  }, [open]);
-
-  useEffect(() => {
     const discardedId = discardedIdRef.current;
     if (discardedId == null) {
       return;
@@ -141,7 +131,7 @@ export function ChatWidget() {
               close();
             }
           }}
-          className="flex h-full flex-col overflow-hidden rounded-xl border bg-background"
+          className="fixed right-4 bottom-4 flex h-[min(36rem,calc(100dvh-2rem))] w-96 flex-col overflow-hidden rounded-xl border bg-background max-sm:inset-3 max-sm:h-auto max-sm:w-auto"
         >
           <ChatPanel
             key={conversationId}
@@ -160,7 +150,7 @@ export function ChatWidget() {
           type="button"
           size="icon-lg"
           aria-label="Open chat"
-          className="size-full rounded-lg"
+          className="fixed right-4 bottom-4"
           onClick={() => setOpen(true)}
         >
           <MessageSquareIcon />

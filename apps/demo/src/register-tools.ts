@@ -21,21 +21,10 @@ type ModelContext = {
       inputSchema?: object;
       execute: (input: object) => unknown | Promise<unknown>;
     },
-    options: { signal: AbortSignal; exposedTo?: string[] },
+    options: { signal: AbortSignal },
   ): Promise<void>;
   getTools(): Promise<Array<PageTool>>;
 };
-
-function widgetOrigin() {
-  const script = document.querySelector<HTMLScriptElement>(
-    'script[src*="widget.js"]',
-  );
-  if (script?.src) {
-    return new URL(script.src).origin;
-  }
-
-  return "http://localhost:5173";
-}
 
 function modelContext(): ModelContext | undefined {
   if (!("modelContext" in document)) {
@@ -79,7 +68,7 @@ export function registerShopTools(signal: AbortSignal) {
     return;
   }
 
-  const options = { signal, exposedTo: [widgetOrigin()] };
+  const options = { signal };
 
   void context.registerTool(
     {

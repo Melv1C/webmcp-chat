@@ -1,5 +1,7 @@
 import { Tooltip as TooltipPrimitive } from "@base-ui/react/tooltip"
 import { cn } from "cn"
+import { useContext } from "react"
+import { PortalContainer } from "@/lib/portal-container"
 
 function TooltipProvider({
   delay = 0,
@@ -36,7 +38,7 @@ function TooltipContent({
     "align" | "alignOffset" | "side" | "sideOffset"
   >) {
   return (
-    <TooltipPrimitive.Portal>
+    <TooltipPrimitive.Portal container={useContext(PortalContainer)}>
       <TooltipPrimitive.Positioner
         align={align}
         alignOffset={alignOffset}

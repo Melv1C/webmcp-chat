@@ -16,7 +16,7 @@ export default defineConfig({
         server.middlewares.use((request, _response, next) => {
           const url = request.url ?? "";
           if (url === "/widget.js" || url.startsWith("/widget.js?")) {
-            request.url = "/src/widget.ts";
+            request.url = "/src/widget.tsx";
           }
           next();
         });
@@ -38,14 +38,8 @@ export default defineConfig({
   },
   build: {
     rollupOptions: {
-      input: {
-        embed: path.resolve(directory, "index.html"),
-        widget: path.resolve(directory, "src/widget.ts"),
-      },
-      output: {
-        entryFileNames: (chunk) =>
-          chunk.name === "widget" ? "widget.js" : "assets/[name]-[hash].js",
-      },
+      input: path.resolve(directory, "src/widget.tsx"),
+      output: { entryFileNames: "widget.js" },
     },
   },
 });

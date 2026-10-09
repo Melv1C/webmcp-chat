@@ -1,15 +1,13 @@
 import { localStoragePersistence } from "@tanstack/ai-react";
-import { hostOrigin } from "@/lib/host-origin";
 
 const VERSION = "v1";
-const originKey = encodeURIComponent(hostOrigin);
 
 export const chatPersistence = localStoragePersistence({
-  keyPrefix: `webmcp:${VERSION}:${originKey}:`,
+  keyPrefix: `webmcp:${VERSION}:`,
 });
 
 function currentConversationKey() {
-  return `webmcp:${VERSION}:current:${originKey}`;
+  return `webmcp:${VERSION}:current`;
 }
 
 export function readConversationId(): string {
@@ -27,7 +25,8 @@ export function readConversationId(): string {
 
 export function createConversationId(): string {
   const id =
-    crypto.randomUUID?.() ?? `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
+    crypto.randomUUID?.() ??
+    `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
 
   try {
     localStorage.setItem(currentConversationKey(), id);

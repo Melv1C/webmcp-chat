@@ -167,9 +167,8 @@ function Shop() {
       <h1>Shop</h1>
       <p className="lede">
         Spoke &amp; Spoke is a one-stand shop. This page is the host. The chat
-        in the corner lives in an iframe from the widget origin, so this page
-        never shares CSS or React with it. It only sees tools the shop
-        registered.
+        in the corner lives in a shadow root, so this page never shares CSS
+        with it. It only sees tools the shop registered.
       </p>
       <dl className="hours">
         <div>

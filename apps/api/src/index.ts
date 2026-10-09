@@ -10,6 +10,7 @@ import { byokMissing, getByokKey } from "@tanstack/ai/byok/server";
 import { createOpenRouterText } from "@tanstack/ai-openrouter";
 import { openrouterByok } from "@tanstack/ai-openrouter/byok";
 import { Hono } from "hono";
+import { cors } from "hono/cors";
 
 const workspaceEnv = resolve(import.meta.dir, "../../.env");
 if (existsSync(workspaceEnv)) {
@@ -23,6 +24,7 @@ const DEFAULT_MODEL = "openai/gpt-5.5";
 type OpenRouterModel = Parameters<typeof createOpenRouterText>[0];
 
 const app = new Hono();
+app.use("/api/*", cors());
 
 app.get("/health", (context) => {
   return context.json({ status: "ok" });

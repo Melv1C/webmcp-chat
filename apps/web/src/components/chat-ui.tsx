@@ -1,4 +1,4 @@
-import type { AnyClientTool, WebMCPPageTool } from "@tanstack/ai-client";
+import type { AnyClientTool } from "@tanstack/ai-client";
 import {
   fetchServerSentEvents,
   useChat,
@@ -18,7 +18,12 @@ import {
   type MarkdownComponentProps,
   type MarkdownComponents,
 } from "@tanstack/markdown/react";
-import { ArrowUpIcon, BrainIcon, ChevronDownIcon, WrenchIcon } from "lucide-react";
+import {
+  ArrowUpIcon,
+  BrainIcon,
+  ChevronDownIcon,
+  WrenchIcon,
+} from "lucide-react";
 import {
   createContext,
   useContext,
@@ -53,19 +58,14 @@ import {
   MessageScrollerViewport,
 } from "@/components/ui/message-scroller";
 import { PageToolsList, usePageToolsStore } from "@/components/page-tools";
-import { hostOrigin } from "@/lib/host-origin";
 
 const SUGGESTED_PROMPT = "What can you do on this page?";
 
 const chatOptions = {
-  connection: fetchServerSentEvents("/api/chat"),
+  connection: fetchServerSentEvents(`${new URL(import.meta.url).origin}/api/chat`),
   persistence: chatPersistence,
   tools: [] as AnyClientTool[],
 };
-
-function isChatPageTool(tool: WebMCPPageTool) {
-  return tool.origin === hostOrigin && !tool.name.includes(".");
-}
 
 const streamingExtensions = [streamingMarkdownExtension()];
 
@@ -429,7 +429,7 @@ const useChatContext = chatUI.useChatContext;
 export const AppChat = chatUI.Chat;
 
 export function useAppChat(threadId: string) {
-  const pageTools = usePageWebMCPTools({ filter: isChatPageTool });
+  const pageTools = usePageWebMCPTools();
   const chat = useChat({
     ...chatOptions,
     threadId,

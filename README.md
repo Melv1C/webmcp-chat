@@ -28,7 +28,7 @@ bun run dev
 
 Open the demo at <http://localhost:5174>. It is a bike-shop job board (Desk, Done, Shop) that registers create, update, delete, and navigation tools, then loads `<webmcp-chat>` from <http://localhost:5173/widget.js>.
 
-The widget origin is <http://localhost:5173> (iframe inner document). It proxies `/api` to the Hono app. The API health route is <http://localhost:3001/health>. Chat POSTs go to `/api/chat`.
+The widget origin is <http://localhost:5173>. It serves `widget.js` and proxies `/api` to the Hono app. The API health route is <http://localhost:3001/health>. Chat POSTs go to `/api/chat`.
 
 Embed the widget on a host page:
 
@@ -37,7 +37,7 @@ Embed the widget on a host page:
 <webmcp-chat></webmcp-chat>
 ```
 
-`<webmcp-chat>` mounts an iframe of the widget origin. Register page tools with `exposedTo: [widgetOrigin]` so the iframe is allowed to see them. The host still owns `document.modelContext`.
+`<webmcp-chat>` renders the widget in a shadow root on the host page, so it reads the host's `document.modelContext` tools directly. Chat requests go to `/api/chat` on the widget origin.
 
 Build all workspaces with:
 
