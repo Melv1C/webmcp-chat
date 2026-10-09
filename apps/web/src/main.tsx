@@ -1,8 +1,10 @@
-import "@/lib/webmcp-polyfill";
+import { installWebMCP } from "@mcp-b/webmcp-polyfill";
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import App from "./App";
 import "./index.css";
+
+installWebMCP();
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
