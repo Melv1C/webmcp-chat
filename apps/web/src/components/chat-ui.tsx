@@ -51,6 +51,7 @@ import {
   MessageScrollerProvider,
   MessageScrollerViewport,
 } from "@/components/ui/message-scroller";
+import { PageToolsList, usePageTools } from "@/components/page-tools";
 import { hostOrigin } from "@/lib/host-origin";
 
 const SUGGESTED_PROMPT = "What can you do on this page?";
@@ -97,9 +98,20 @@ function isToolRunning(state: string) {
 
 function ChatInput() {
   const chat = useChatContext();
+  const pageTools = usePageTools();
   const composerRef = useRef<HTMLTextAreaElement>(null);
   const [input, setInput] = useState("");
   const canSend = input.trim().length > 0 && !chat.isLoading;
+  const prefillNonce = pageTools?.prefill.nonce ?? 0;
+  const prefillText = pageTools?.prefill.text ?? "";
+
+  useEffect(() => {
+    if (prefillNonce === 0) {
+      return;
+    }
+    setInput(prefillText);
+    composerRef.current?.focus();
+  }, [prefillNonce, prefillText]);
 
   function submit(text: string) {
     const trimmed = text.trim();
@@ -153,38 +165,43 @@ function ChatInput() {
 
 function ChatLayout({ Messages, Input }: LayoutProps<typeof chatOptions>) {
   const chat = useChatContext();
+  const pageTools = usePageTools();
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      <MessageScrollerProvider defaultScrollPosition="last-anchor">
-        <MessageScroller className="min-h-0 flex-1">
-          <MessageScrollerViewport aria-label="Conversation">
-            <MessageScrollerContent className="gap-3 px-3 py-3">
-              {chat.messages.length === 0 ? (
-                <MessageScrollerItem>
-                  <div className="flex flex-col items-start gap-3 pt-2">
-                    <p className="text-sm text-muted-foreground">
-                      Ask about this page.
-                    </p>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      disabled={chat.isLoading}
-                      onClick={() => void chat.sendMessage(SUGGESTED_PROMPT)}
-                    >
-                      {SUGGESTED_PROMPT}
-                    </Button>
-                  </div>
-                </MessageScrollerItem>
-              ) : (
-                <Messages />
-              )}
-            </MessageScrollerContent>
-          </MessageScrollerViewport>
-          <MessageScrollerButton />
-        </MessageScroller>
-      </MessageScrollerProvider>
+      {pageTools?.listOpen ? (
+        <PageToolsList />
+      ) : (
+        <MessageScrollerProvider defaultScrollPosition="last-anchor">
+          <MessageScroller className="min-h-0 flex-1">
+            <MessageScrollerViewport aria-label="Conversation">
+              <MessageScrollerContent className="gap-3 px-3 py-3">
+                {chat.messages.length === 0 ? (
+                  <MessageScrollerItem>
+                    <div className="flex flex-col items-start gap-3 pt-2">
+                      <p className="text-sm text-muted-foreground">
+                        Ask about this page.
+                      </p>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        disabled={chat.isLoading}
+                        onClick={() => void chat.sendMessage(SUGGESTED_PROMPT)}
+                      >
+                        {SUGGESTED_PROMPT}
+                      </Button>
+                    </div>
+                  </MessageScrollerItem>
+                ) : (
+                  <Messages />
+                )}
+              </MessageScrollerContent>
+            </MessageScrollerViewport>
+            <MessageScrollerButton />
+          </MessageScroller>
+        </MessageScrollerProvider>
+      )}
       {chat.error ? (
         <p role="alert" className="px-3 pb-1 text-xs text-destructive">
           {chat.error.message}
@@ -380,9 +397,10 @@ export const AppChat = chatUI.Chat;
 
 export function useAppChat(threadId: string) {
   const pageTools = usePageWebMCPTools({ filter: isChatPageTool });
-  return useChat({
+  const chat = useChat({
     ...chatOptions,
     threadId,
     tools: pageTools,
   });
+  return { chat, pageTools };
 }

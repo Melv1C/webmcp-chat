@@ -1,6 +1,7 @@
 import { MessageSquareIcon, PlusIcon, XIcon } from "lucide-react";
 import { useEffect, useId, useRef, useState } from "react";
 import { AppChat, useAppChat } from "@/components/chat-ui";
+import { PageToolsProvider, PageToolsToggle, usePageTools } from "@/components/page-tools";
 import { Button } from "@/components/ui/button";
 import {
   Tooltip,
@@ -27,10 +28,44 @@ function ChatPanel({
   onClose: () => void;
   onNewChat: () => void;
 }) {
-  const chat = useAppChat(threadId);
+  const { chat, pageTools } = useAppChat(threadId);
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col">
+    <PageToolsProvider tools={pageTools}>
+      <ChatPanelBody
+        chat={chat}
+        labelledBy={labelledBy}
+        onClose={onClose}
+        onNewChat={onNewChat}
+      />
+    </PageToolsProvider>
+  );
+}
+
+function ChatPanelBody({
+  chat,
+  labelledBy,
+  onClose,
+  onNewChat,
+}: {
+  chat: ReturnType<typeof useAppChat>["chat"];
+  labelledBy: string;
+  onClose: () => void;
+  onNewChat: () => void;
+}) {
+  const pageTools = usePageTools();
+
+  return (
+    <div
+      className="flex min-h-0 flex-1 flex-col"
+      onKeyDown={(event) => {
+        if (event.key === "Escape" && pageTools?.listOpen) {
+          event.preventDefault();
+          event.stopPropagation();
+          pageTools.setListOpen(false);
+        }
+      }}
+    >
       <header className="flex h-11 shrink-0 items-center gap-1 border-b px-2">
         <h2
           id={labelledBy}
@@ -38,6 +73,7 @@ function ChatPanel({
         >
           WebMCP Chat
         </h2>
+        <PageToolsToggle />
         <Tooltip>
           <TooltipTrigger
             render={
