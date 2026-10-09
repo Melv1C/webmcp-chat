@@ -45,7 +45,10 @@ class WebmcpChatElement extends HTMLElement {
     applyIframeBox(this, false);
     const iframe = document.createElement("iframe");
     iframe.title = "WebMCP Chat";
-    iframe.setAttribute("allow", "clipboard-write; tools");
+    iframe.setAttribute(
+      "allow",
+      "clipboard-write; tools; publickey-credentials-create *; publickey-credentials-get *",
+    );
     iframe.style.cssText =
       "display:block;width:100%;height:100%;border:0;background:transparent;color-scheme:none;";
     const src = new URL("/", widgetOrigin());

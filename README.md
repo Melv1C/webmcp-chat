@@ -15,7 +15,7 @@ Vite+ needs Node.js 22.18 or newer for its local CLI. Bun runs the API and manag
 
 ## Start the apps
 
-Copy `.env.example` to `.env` at the repository root and set `OPENROUTER_API_KEY`. Optionally set `OPENROUTER_MODEL` (default `openai/gpt-5.5`).
+Copy `.env.example` to `.env` at the repository root if you want a local operator key. `OPENROUTER_API_KEY` is optional. Chat visitors paste an OpenRouter key in the widget (or sign in with OpenRouter); that key stays in the browser and is sent as `x-byok-openrouter`. If the env key is set, the widget skips the first-open gate and the API can use it when no header is present. Optionally set `OPENROUTER_MODEL` (default `openai/gpt-5.5`).
 
 The API also loads `apps/api/.env`. Bun loads `.env` from the API working directory (`apps/api`) automatically, so a copy there works too. If both files exist, already-set values (including `apps/api/.env`) win over the repository-root file.
 
@@ -37,7 +37,7 @@ Embed the widget on a host page:
 <webmcp-chat></webmcp-chat>
 ```
 
-`<webmcp-chat>` mounts an iframe of the widget origin. Register page tools with `exposedTo: [widgetOrigin]` so the iframe is allowed to see them. The host still owns `document.modelContext`.
+`<webmcp-chat>` mounts an iframe of the widget origin. The iframe allows clipboard writes and passkeys (`publickey-credentials-create` / `publickey-credentials-get`) so a visitor can store an OpenRouter key in that browser. Register page tools with `exposedTo: [widgetOrigin]` so the iframe is allowed to see them. The host still owns `document.modelContext`. There is no `api-key` attribute; visitor keys never leave the iframe origin except as `x-byok-openrouter` on chat POSTs.
 
 Build all workspaces with:
 

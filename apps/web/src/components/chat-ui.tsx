@@ -51,6 +51,8 @@ import {
   MessageScrollerProvider,
   MessageScrollerViewport,
 } from "@/components/ui/message-scroller";
+import { OpenRouterKeySheet, useOpenRouterKeyGate } from "@/components/open-router-key-sheet";
+import { byok, openKeySheet, openrouterByok } from "@/lib/byok";
 import { hostOrigin } from "@/lib/host-origin";
 
 const SUGGESTED_PROMPT = "What can you do on this page?";
@@ -59,6 +61,8 @@ const chatOptions = {
   connection: fetchServerSentEvents("/api/chat"),
   persistence: chatPersistence,
   tools: [] as AnyClientTool[],
+  byok,
+  forwardedProps: { provider: openrouterByok.id },
 };
 
 function isChatPageTool(tool: WebMCPPageTool) {
@@ -97,17 +101,33 @@ function isToolRunning(state: string) {
 
 function ChatInput() {
   const chat = useChatContext();
+  const key = useOpenRouterKeyGate();
   const composerRef = useRef<HTMLTextAreaElement>(null);
   const [input, setInput] = useState("");
-  const canSend = input.trim().length > 0 && !chat.isLoading;
+  const canSend =
+    input.trim().length > 0 && !chat.isLoading && key.canSend;
 
   function submit(text: string) {
     const trimmed = text.trim();
     if (!trimmed || chat.isLoading) {
       return;
     }
-    void chat.sendMessage(trimmed);
+    if (!key.canSend) {
+      openKeySheet();
+      return;
+    }
     setInput("");
+    void chat
+      .sendMessage(trimmed)
+      .then(() => {
+        if (byok.getSnapshot().prompt) {
+          setInput(trimmed);
+          openKeySheet();
+        }
+      })
+      .catch(() => {
+        setInput(trimmed);
+      });
   }
 
   return (
@@ -153,6 +173,7 @@ function ChatInput() {
 
 function ChatLayout({ Messages, Input }: LayoutProps<typeof chatOptions>) {
   const chat = useChatContext();
+  const key = useOpenRouterKeyGate();
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
@@ -160,7 +181,21 @@ function ChatLayout({ Messages, Input }: LayoutProps<typeof chatOptions>) {
         <MessageScroller className="min-h-0 flex-1">
           <MessageScrollerViewport aria-label="Conversation">
             <MessageScrollerContent className="gap-3 px-3 py-3">
-              {chat.messages.length === 0 ? (
+              {chat.messages.length > 0 ? <Messages /> : null}
+              {key.showSheet ? (
+                <MessageScrollerItem>
+                  <OpenRouterKeySheet
+                    onSaved={
+                      key.rejected
+                        ? () => {
+                            void chat.reload();
+                          }
+                        : undefined
+                    }
+                  />
+                </MessageScrollerItem>
+              ) : null}
+              {chat.messages.length === 0 && !key.showSheet ? (
                 <MessageScrollerItem>
                   <div className="flex flex-col items-start gap-3 pt-2">
                     <p className="text-sm text-muted-foreground">
@@ -171,15 +206,19 @@ function ChatLayout({ Messages, Input }: LayoutProps<typeof chatOptions>) {
                       variant="outline"
                       size="sm"
                       disabled={chat.isLoading}
-                      onClick={() => void chat.sendMessage(SUGGESTED_PROMPT)}
+                      onClick={() => {
+                        if (!key.canSend) {
+                          openKeySheet();
+                          return;
+                        }
+                        void chat.sendMessage(SUGGESTED_PROMPT);
+                      }}
                     >
                       {SUGGESTED_PROMPT}
                     </Button>
                   </div>
                 </MessageScrollerItem>
-              ) : (
-                <Messages />
-              )}
+              ) : null}
             </MessageScrollerContent>
           </MessageScrollerViewport>
           <MessageScrollerButton />
