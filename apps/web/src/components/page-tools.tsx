@@ -1,14 +1,6 @@
 import type { AnyClientTool } from "@tanstack/ai-client";
 import { WrenchIcon } from "lucide-react";
-import {
-  createContext,
-  useContext,
-  useEffect,
-  useId,
-  useMemo,
-  useState,
-  type ReactNode,
-} from "react";
+import { create } from "zustand";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
@@ -17,20 +9,42 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 
-type PageToolsContextValue = {
+export const PAGE_TOOLS_LIST_ID = "page-tools-list";
+
+type PageToolsState = {
   tools: AnyClientTool[];
   listOpen: boolean;
-  setListOpen: (open: boolean) => void;
-  listId: string;
   prefill: { nonce: number; text: string };
+  setTools: (tools: AnyClientTool[]) => void;
+  setListOpen: (open: boolean) => void;
   pickTool: (tool: AnyClientTool) => void;
 };
 
-const PageToolsContext = createContext<PageToolsContextValue | null>(null);
-
-export function usePageTools() {
-  return useContext(PageToolsContext);
-}
+export const usePageToolsStore = create<PageToolsState>((set) => ({
+  tools: [],
+  listOpen: false,
+  prefill: { nonce: 0, text: "" },
+  setTools(tools) {
+    set((state) => ({
+      tools,
+      listOpen: tools.length === 0 ? false : state.listOpen,
+    }));
+  },
+  setListOpen(open) {
+    set((state) => ({
+      listOpen: open && state.tools.length > 0,
+    }));
+  },
+  pickTool(tool) {
+    set((state) => ({
+      prefill: {
+        nonce: state.prefill.nonce + 1,
+        text: `\`${tool.name}\``,
+      },
+      listOpen: false,
+    }));
+  },
+}));
 
 function toolDescription(tool: AnyClientTool) {
   return "description" in tool && typeof tool.description === "string"
@@ -38,52 +52,12 @@ function toolDescription(tool: AnyClientTool) {
     : "";
 }
 
-export function PageToolsProvider({
-  tools,
-  children,
-}: {
-  tools: AnyClientTool[];
-  children: ReactNode;
-}) {
-  const listId = useId();
-  const [listOpen, setListOpen] = useState(false);
-  const [prefill, setPrefill] = useState({ nonce: 0, text: "" });
-
-  useEffect(() => {
-    if (tools.length === 0) {
-      setListOpen(false);
-    }
-  }, [tools.length]);
-
-  const value = useMemo(
-    () => ({
-      tools,
-      listOpen: listOpen && tools.length > 0,
-      setListOpen,
-      listId,
-      prefill,
-      pickTool(tool: AnyClientTool) {
-        setPrefill((current) => ({
-          nonce: current.nonce + 1,
-          text: `\`${tool.name}\``,
-        }));
-        setListOpen(false);
-      },
-    }),
-    [listId, listOpen, prefill, tools],
-  );
-
-  return (
-    <PageToolsContext.Provider value={value}>
-      {children}
-    </PageToolsContext.Provider>
-  );
-}
-
 export function PageToolsToggle() {
-  const pageTools = usePageTools();
+  const toolCount = usePageToolsStore((state) => state.tools.length);
+  const listOpen = usePageToolsStore((state) => state.listOpen);
+  const setListOpen = usePageToolsStore((state) => state.setListOpen);
 
-  if (!pageTools || pageTools.tools.length === 0) {
+  if (toolCount === 0) {
     return null;
   }
 
@@ -96,10 +70,10 @@ export function PageToolsToggle() {
             variant="ghost"
             size="icon-sm"
             aria-label="Tools on this page"
-            aria-expanded={pageTools.listOpen}
-            aria-controls={pageTools.listId}
-            aria-pressed={pageTools.listOpen}
-            onClick={() => pageTools.setListOpen(!pageTools.listOpen)}
+            aria-expanded={listOpen}
+            aria-controls={PAGE_TOOLS_LIST_ID}
+            aria-pressed={listOpen}
+            onClick={() => setListOpen(!listOpen)}
           />
         }
       >
@@ -113,18 +87,14 @@ export function PageToolsToggle() {
 }
 
 export function PageToolsList() {
-  const pageTools = usePageTools();
-
-  if (!pageTools) {
-    return null;
-  }
-
-  const count = pageTools.tools.length;
-  const headingId = `${pageTools.listId}-heading`;
+  const tools = usePageToolsStore((state) => state.tools);
+  const pickTool = usePageToolsStore((state) => state.pickTool);
+  const count = tools.length;
+  const headingId = `${PAGE_TOOLS_LIST_ID}-heading`;
 
   return (
     <section
-      id={pageTools.listId}
+      id={PAGE_TOOLS_LIST_ID}
       aria-labelledby={headingId}
       className="flex min-h-0 flex-1 flex-col"
     >
@@ -141,14 +111,14 @@ export function PageToolsList() {
       </p>
       <ScrollArea className="min-h-0 flex-1">
         <ul className="flex flex-col gap-0.5 px-1.5 pb-2">
-          {pageTools.tools.map((tool) => {
+          {tools.map((tool) => {
             const description = toolDescription(tool);
             return (
               <li key={tool.name}>
                 <button
                   type="button"
                   className="flex w-full items-start gap-2.5 rounded-lg px-2 py-2 text-left outline-none hover:bg-muted focus-visible:ring-3 focus-visible:ring-ring/50"
-                  onClick={() => pageTools.pickTool(tool)}
+                  onClick={() => pickTool(tool)}
                 >
                   <WrenchIcon className="mt-0.5 size-3.5 shrink-0 text-muted-foreground" />
                   <span className="min-w-0 flex-1">

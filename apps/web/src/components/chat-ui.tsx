@@ -52,7 +52,7 @@ import {
   MessageScrollerProvider,
   MessageScrollerViewport,
 } from "@/components/ui/message-scroller";
-import { PageToolsList, usePageTools } from "@/components/page-tools";
+import { PageToolsList, usePageToolsStore } from "@/components/page-tools";
 import { hostOrigin } from "@/lib/host-origin";
 
 const SUGGESTED_PROMPT = "What can you do on this page?";
@@ -99,14 +99,14 @@ function isToolRunning(state: string) {
 
 function ChatInput() {
   const chat = useChatContext();
-  const pageTools = usePageTools();
+  const prefill = usePageToolsStore((state) => state.prefill);
   const composerRef = useRef<HTMLTextAreaElement>(null);
   const selectionRef = useRef({ start: 0, end: 0 });
   const pendingCaretRef = useRef<number | null>(null);
   const [input, setInput] = useState("");
   const canSend = input.trim().length > 0 && !chat.isLoading;
-  const prefillNonce = pageTools?.prefill.nonce ?? 0;
-  const prefillText = pageTools?.prefill.text ?? "";
+  const prefillNonce = prefill.nonce;
+  const prefillText = prefill.text;
 
   function rememberSelection(target: HTMLTextAreaElement) {
     selectionRef.current = {
@@ -198,11 +198,11 @@ function ChatInput() {
 
 function ChatLayout({ Messages, Input }: LayoutProps<typeof chatOptions>) {
   const chat = useChatContext();
-  const pageTools = usePageTools();
+  const listOpen = usePageToolsStore((state) => state.listOpen);
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      {pageTools?.listOpen ? (
+      {listOpen ? (
         <PageToolsList />
       ) : (
         <MessageScrollerProvider defaultScrollPosition="last-anchor">

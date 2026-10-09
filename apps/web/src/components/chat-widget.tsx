@@ -1,7 +1,7 @@
 import { MessageSquareIcon, PlusIcon, XIcon } from "lucide-react";
 import { useEffect, useId, useRef, useState } from "react";
 import { AppChat, useAppChat } from "@/components/chat-ui";
-import { PageToolsProvider, PageToolsToggle, usePageTools } from "@/components/page-tools";
+import { PageToolsToggle, usePageToolsStore } from "@/components/page-tools";
 import { Button } from "@/components/ui/button";
 import {
   Tooltip,
@@ -29,40 +29,23 @@ function ChatPanel({
   onNewChat: () => void;
 }) {
   const { chat, pageTools } = useAppChat(threadId);
+  const listOpen = usePageToolsStore((state) => state.listOpen);
+  const setListOpen = usePageToolsStore((state) => state.setListOpen);
+  const setTools = usePageToolsStore((state) => state.setTools);
 
-  return (
-    <PageToolsProvider tools={pageTools}>
-      <ChatPanelBody
-        chat={chat}
-        labelledBy={labelledBy}
-        onClose={onClose}
-        onNewChat={onNewChat}
-      />
-    </PageToolsProvider>
-  );
-}
-
-function ChatPanelBody({
-  chat,
-  labelledBy,
-  onClose,
-  onNewChat,
-}: {
-  chat: ReturnType<typeof useAppChat>["chat"];
-  labelledBy: string;
-  onClose: () => void;
-  onNewChat: () => void;
-}) {
-  const pageTools = usePageTools();
+  useEffect(() => {
+    setTools(pageTools);
+    return () => setTools([]);
+  }, [pageTools, setTools]);
 
   return (
     <div
       className="flex min-h-0 flex-1 flex-col"
       onKeyDown={(event) => {
-        if (event.key === "Escape" && pageTools?.listOpen) {
+        if (event.key === "Escape" && listOpen) {
           event.preventDefault();
           event.stopPropagation();
-          pageTools.setListOpen(false);
+          setListOpen(false);
         }
       }}
     >
