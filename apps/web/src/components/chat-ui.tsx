@@ -23,6 +23,7 @@ import {
   createContext,
   useContext,
   useEffect,
+  useLayoutEffect,
   useRef,
   useState,
   type ComponentType,
@@ -100,18 +101,47 @@ function ChatInput() {
   const chat = useChatContext();
   const pageTools = usePageTools();
   const composerRef = useRef<HTMLTextAreaElement>(null);
+  const selectionRef = useRef({ start: 0, end: 0 });
+  const pendingCaretRef = useRef<number | null>(null);
   const [input, setInput] = useState("");
   const canSend = input.trim().length > 0 && !chat.isLoading;
   const prefillNonce = pageTools?.prefill.nonce ?? 0;
   const prefillText = pageTools?.prefill.text ?? "";
 
+  function rememberSelection(target: HTMLTextAreaElement) {
+    selectionRef.current = {
+      start: target.selectionStart,
+      end: target.selectionEnd,
+    };
+  }
+
   useEffect(() => {
     if (prefillNonce === 0) {
       return;
     }
-    setInput(prefillText);
-    composerRef.current?.focus();
+    const insert = prefillText;
+    setInput((current) => {
+      const start = Math.min(selectionRef.current.start, current.length);
+      const end = Math.min(selectionRef.current.end, current.length);
+      pendingCaretRef.current = start + insert.length;
+      return current.slice(0, start) + insert + current.slice(end);
+    });
   }, [prefillNonce, prefillText]);
+
+  useLayoutEffect(() => {
+    const caret = pendingCaretRef.current;
+    if (caret == null) {
+      return;
+    }
+    pendingCaretRef.current = null;
+    const el = composerRef.current;
+    if (!el) {
+      return;
+    }
+    el.focus();
+    el.setSelectionRange(caret, caret);
+    selectionRef.current = { start: caret, end: caret };
+  }, [input]);
 
   function submit(text: string) {
     const trimmed = text.trim();
@@ -120,6 +150,7 @@ function ChatInput() {
     }
     void chat.sendMessage(trimmed);
     setInput("");
+    selectionRef.current = { start: 0, end: 0 };
   }
 
   return (
@@ -140,6 +171,8 @@ function ChatInput() {
           autoFocus
           className="min-h-10 max-h-32 py-2.5 field-sizing-content"
           onChange={(event) => setInput(event.target.value)}
+          onSelect={(event) => rememberSelection(event.currentTarget)}
+          onBlur={(event) => rememberSelection(event.currentTarget)}
           onKeyDown={(event) => {
             if (event.key === "Enter" && !event.shiftKey) {
               event.preventDefault();
