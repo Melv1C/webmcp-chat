@@ -4,6 +4,7 @@ import {
   useChat,
   usePageWebMCPTools,
 } from "@tanstack/ai-react";
+import { chatPersistence } from "@/lib/chat-persistence";
 import {
   createChatUI,
   type LayoutProps,
@@ -56,6 +57,7 @@ const SUGGESTED_PROMPT = "What can you do on this page?";
 
 const chatOptions = {
   connection: fetchServerSentEvents("/api/chat"),
+  persistence: chatPersistence,
   tools: [] as AnyClientTool[],
 };
 
@@ -376,10 +378,11 @@ const chatUI = createChatUI(chatOptions, {
 const useChatContext = chatUI.useChatContext;
 export const AppChat = chatUI.Chat;
 
-export function useAppChat() {
+export function useAppChat(threadId: string) {
   const pageTools = usePageWebMCPTools({ filter: isChatPageTool });
   return useChat({
     ...chatOptions,
+    threadId,
     tools: pageTools,
   });
 }
