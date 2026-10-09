@@ -7,7 +7,22 @@ import { defineConfig } from "vite-plus";
 const directory = path.dirname(fileURLToPath(import.meta.url));
 
 export default defineConfig({
-  plugins: [react(), tailwindcss()],
+  plugins: [
+    react(),
+    tailwindcss(),
+    {
+      name: "widget-dev-entry",
+      configureServer(server) {
+        server.middlewares.use((request, _response, next) => {
+          const url = request.url ?? "";
+          if (url === "/widget.js" || url.startsWith("/widget.js?")) {
+            request.url = "/src/widget.ts";
+          }
+          next();
+        });
+      },
+    },
+  ],
   resolve: {
     alias: {
       "@": path.resolve(directory, "src"),
@@ -15,8 +30,22 @@ export default defineConfig({
   },
   server: {
     port: 5173,
+    cors: true,
+    origin: "http://localhost:5173",
     proxy: {
       "/api": "http://localhost:3001",
+    },
+  },
+  build: {
+    rollupOptions: {
+      input: {
+        embed: path.resolve(directory, "index.html"),
+        widget: path.resolve(directory, "src/widget.ts"),
+      },
+      output: {
+        entryFileNames: (chunk) =>
+          chunk.name === "widget" ? "widget.js" : "assets/[name]-[hash].js",
+      },
     },
   },
 });

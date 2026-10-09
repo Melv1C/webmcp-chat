@@ -50,15 +50,17 @@ import {
   MessageScrollerProvider,
   MessageScrollerViewport,
 } from "@/components/ui/message-scroller";
-import { SUGGESTED_PROMPT } from "@/lib/page-tool";
+import { hostOrigin } from "@/lib/host-origin";
 
-export const chatOptions = {
+const SUGGESTED_PROMPT = "What can you do on this page?";
+
+const chatOptions = {
   connection: fetchServerSentEvents("/api/chat"),
   tools: [] as AnyClientTool[],
 };
 
 function isChatPageTool(tool: WebMCPPageTool) {
-  return tool.origin === location.origin && !tool.name.includes(".");
+  return tool.origin === hostOrigin && !tool.name.includes(".");
 }
 
 const streamingExtensions = [streamingMarkdownExtension()];
@@ -371,6 +373,9 @@ const chatUI = createChatUI(chatOptions, {
   toolsComponents: anyToolComponents(ToolCall),
 });
 
+const useChatContext = chatUI.useChatContext;
+export const AppChat = chatUI.Chat;
+
 export function useAppChat() {
   const pageTools = usePageWebMCPTools({ filter: isChatPageTool });
   return useChat({
@@ -378,7 +383,3 @@ export function useAppChat() {
     tools: pageTools,
   });
 }
-
-export const AppChat = chatUI.Chat;
-
-export const useChatContext = chatUI.useChatContext;

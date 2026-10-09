@@ -1,15 +1,15 @@
 import { installWebMCP } from "@mcp-b/webmcp-polyfill";
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
-import { ChatWidget } from "@/components/chat-widget";
-import { allowHostOriginTools } from "@/lib/host-origin";
+import { App } from "./App";
+import { registerShopTools } from "./register-tools";
 import "./index.css";
 
 installWebMCP();
-allowHostOriginTools();
+registerShopTools(new AbortController().signal);
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
-    <ChatWidget />
+    <App />
   </StrictMode>,
 );

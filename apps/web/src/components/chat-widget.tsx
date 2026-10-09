@@ -1,13 +1,15 @@
 import { MessageSquareIcon, PlusIcon, XIcon } from "lucide-react";
-import { useId, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { AppChat, useAppChat } from "@/components/chat-ui";
 import { Button } from "@/components/ui/button";
 import {
   Tooltip,
   TooltipContent,
+  TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { cn } from "@/lib/utils";
+import { WEBMCP_CHAT_OPEN } from "@/lib/embed-protocol";
+import { hostOrigin } from "@/lib/host-origin";
 
 function ChatPanel({
   labelledBy,
@@ -43,7 +45,9 @@ function ChatPanel({
           >
             <PlusIcon />
           </TooltipTrigger>
-          <TooltipContent>New chat</TooltipContent>
+          <TooltipContent side="bottom" align="end">
+            New chat
+          </TooltipContent>
         </Tooltip>
         <Tooltip>
           <TooltipTrigger
@@ -59,7 +63,9 @@ function ChatPanel({
           >
             <XIcon />
           </TooltipTrigger>
-          <TooltipContent>Close</TooltipContent>
+          <TooltipContent side="bottom" align="end">
+            Close
+          </TooltipContent>
         </Tooltip>
       </header>
       <AppChat chat={chat} />
@@ -73,13 +79,21 @@ export function ChatWidget() {
   const [open, setOpen] = useState(false);
   const [session, setSession] = useState(0);
 
+  useEffect(() => {
+    if (window.parent === window) {
+      return;
+    }
+
+    window.parent.postMessage({ type: WEBMCP_CHAT_OPEN, open }, hostOrigin);
+  }, [open]);
+
   function close() {
     setOpen(false);
     queueMicrotask(() => launcherRef.current?.focus());
   }
 
   return (
-    <div data-slot="chat-widget">
+    <TooltipProvider>
       {open ? (
         <section
           role="dialog"
@@ -91,10 +105,7 @@ export function ChatWidget() {
               close();
             }
           }}
-          className={cn(
-            "fixed z-50 flex flex-col overflow-hidden border bg-background shadow-[0_12px_40px_-16px_rgb(0_0_0/0.4)]",
-            "inset-3 rounded-xl sm:inset-auto sm:right-4 sm:bottom-4 sm:h-[min(36rem,calc(100dvh-2rem))] sm:w-96",
-          )}
+          className="flex h-full flex-col overflow-hidden rounded-xl border bg-background"
         >
           <ChatPanel
             key={session}
@@ -109,13 +120,12 @@ export function ChatWidget() {
           type="button"
           size="icon-lg"
           aria-label="Open chat"
-          aria-expanded={false}
-          className="fixed right-4 bottom-4 z-50 rounded-lg"
+          className="size-full rounded-lg"
           onClick={() => setOpen(true)}
         >
           <MessageSquareIcon />
         </Button>
       )}
-    </div>
+    </TooltipProvider>
   );
 }

@@ -1,0 +1,237 @@
+:root {
+  --ink: #1b1c19;
+  --wall: #c5cbb8;
+  --ticket: #fff6d1;
+  --stub: #e2b40a;
+  --steel: #4a5850;
+  --rule: #1b1c19;
+  --type-display: Bahnschrift, "DIN Alternate", "Arial Narrow", sans-serif;
+  --type-body: "Segoe UI", "Helvetica Neue", sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  min-height: 100%;
+  background: var(--wall);
+  color: var(--ink);
+  font-family: var(--type-body);
+}
+
+body {
+  font-size: 1.02rem;
+  line-height: 1.4;
+}
+
+.shop {
+  width: min(42rem, calc(100% - 2rem));
+  margin: 0 auto;
+  padding: 1.75rem 0 7rem;
+}
+
+.masthead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem 1.25rem;
+  border-bottom: 4px solid var(--rule);
+  padding-bottom: 0.55rem;
+}
+
+.mark {
+  margin: 0;
+  font-family: var(--type-display);
+  font-size: 1.85rem;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+}
+
+nav {
+  display: flex;
+  gap: 0.15rem 1rem;
+}
+
+nav a {
+  color: var(--ink);
+  text-decoration: none;
+  border-bottom: 3px solid transparent;
+  padding-bottom: 0.1rem;
+}
+
+nav a:hover,
+nav a:focus-visible {
+  border-bottom-color: var(--stub);
+}
+
+nav a[aria-current="page"] {
+  border-bottom-color: var(--rule);
+}
+
+main h1 {
+  margin: 1.15rem 0 0;
+  font-family: var(--type-display);
+  font-size: 2rem;
+  font-weight: 650;
+  letter-spacing: -0.03em;
+}
+
+.lede,
+.empty {
+  margin: 0.45rem 0 0;
+  max-width: 36em;
+}
+
+.empty {
+  color: var(--steel);
+}
+
+.new-job {
+  display: grid;
+  gap: 0.55rem;
+  margin: 1.25rem 0 0;
+}
+
+.new-job label,
+.ticket-body label:not(.done) {
+  display: grid;
+  gap: 0.2rem;
+  font-size: 0.88rem;
+  color: var(--steel);
+}
+
+.new-job input,
+.ticket-body input:not([type="checkbox"]),
+.ticket-body textarea {
+  font: inherit;
+  color: var(--ink);
+  background: var(--ticket);
+  border: 1px solid var(--rule);
+  padding: 0.4rem 0.5rem;
+}
+
+.new-job button,
+.ticket-actions button {
+  font: inherit;
+  color: var(--ink);
+  background: transparent;
+  border: 1px solid var(--rule);
+  padding: 0.35rem 0.7rem;
+  cursor: pointer;
+}
+
+.new-job button {
+  justify-self: start;
+  background: var(--stub);
+  border-width: 2px;
+  font-family: var(--type-display);
+}
+
+.tickets {
+  list-style: none;
+  margin: 1.4rem 0 0;
+  padding: 0;
+  display: grid;
+  gap: 0.85rem;
+}
+
+.ticket {
+  display: grid;
+  grid-template-columns: 4.25rem 1fr;
+  background: var(--ticket);
+  border: 1px solid var(--rule);
+}
+
+.stub {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--stub);
+  border-right: 1px dashed var(--rule);
+  font-family: var(--type-display);
+  font-size: 1.05rem;
+  font-weight: 700;
+}
+
+.ticket-body {
+  padding: 0.7rem 0.85rem 0.75rem;
+}
+
+.ticket-body h2 {
+  margin: 0.15rem 0 0;
+  font-family: var(--type-display);
+  font-size: 1.2rem;
+  font-weight: 650;
+}
+
+.ticket-body p {
+  margin: 0.3rem 0 0;
+}
+
+.done {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.82rem;
+  color: var(--steel);
+}
+
+.ticket-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.55rem;
+}
+
+.hours {
+  display: grid;
+  gap: 0.75rem;
+  margin: 1.2rem 0 0;
+}
+
+.hours div {
+  display: grid;
+  grid-template-columns: 5.5rem 1fr;
+  gap: 0.75rem;
+  padding: 0.55rem 0;
+  border-top: 1px solid var(--rule);
+}
+
+.hours div:last-child {
+  border-bottom: 1px solid var(--rule);
+}
+
+.hours dt {
+  margin: 0;
+  font-family: var(--type-display);
+}
+
+.hours dd {
+  margin: 0;
+}
+
+:focus-visible {
+  outline: 3px solid var(--stub);
+  outline-offset: 2px;
+}
+
+@media (max-width: 640px) {
+  .shop {
+    width: calc(100% - 1.25rem);
+    padding-top: 1.15rem;
+  }
+
+  .hours div {
+    grid-template-columns: 1fr;
+    gap: 0.15rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    scroll-behavior: auto;
+  }
+}

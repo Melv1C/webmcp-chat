@@ -2,7 +2,7 @@
 
 ## Host page
 
-The page that embeds WebMCP Chat and makes page-specific tools available to it.
+The page that embeds WebMCP Chat and makes page-specific tools available to it. In this repo the host is `apps/demo`.
 
 ## Page tool
 
@@ -10,7 +10,7 @@ An action the host page registers for the assistant. The chat widget discovers t
 
 ## Chat widget
 
-The embeddable chat surface that sits on a host page.
+The embeddable floating chat. It ships as the `<webmcp-chat>` custom element from `apps/web`, which mounts an iframe of the widget origin.
 
 ## WebMCP Chat
 
