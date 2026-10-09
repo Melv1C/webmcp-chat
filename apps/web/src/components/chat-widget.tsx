@@ -1,6 +1,7 @@
 import { MessageSquareIcon, PlusIcon, XIcon } from "lucide-react";
 import { useEffect, useId, useRef, useState } from "react";
 import { AppChat, useAppChat } from "@/components/chat-ui";
+import { OpenRouterKeyChip } from "@/components/open-router-key-sheet";
 import { Button } from "@/components/ui/button";
 import {
   Tooltip,
@@ -38,6 +39,7 @@ function ChatPanel({
         >
           WebMCP Chat
         </h2>
+        <OpenRouterKeyChip />
         <Tooltip>
           <TooltipTrigger
             render={

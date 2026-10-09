@@ -24,8 +24,21 @@ type OpenRouterModel = Parameters<typeof createOpenRouterText>[0];
 
 const app = new Hono();
 
+function openRouterHealth() {
+  return {
+    status: "ok" as const,
+    openrouter: {
+      serverKey: Boolean(Bun.env.OPENROUTER_API_KEY?.trim()),
+    },
+  };
+}
+
 app.get("/health", (context) => {
-  return context.json({ status: "ok" });
+  return context.json(openRouterHealth());
+});
+
+app.get("/api/health", (context) => {
+  return context.json(openRouterHealth());
 });
 
 app.post("/api/chat", async (context) => {
