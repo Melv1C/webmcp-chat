@@ -63,10 +63,9 @@ export function PageToolsProvider({
       listId,
       prefill,
       pickTool(tool: AnyClientTool) {
-        const description = toolDescription(tool).trim();
         setPrefill((current) => ({
           nonce: current.nonce + 1,
-          text: description || tool.name,
+          text: `\`${tool.name}\``,
         }));
         setListOpen(false);
       },
