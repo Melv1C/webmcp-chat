@@ -97,8 +97,6 @@ export const byok = defineByok({
   providers: [openrouterByok],
 });
 
-const MINTED_KEY = "webmcp-chat:openrouter-minted";
-
 type Listener = () => void;
 
 const listeners = new Set<Listener>();
@@ -143,22 +141,6 @@ export function openKeySheet() {
 export function closeKeySheet() {
   sheetOpen = false;
   emit();
-}
-
-export function stashMintedOpenRouterKey(key: string) {
-  sessionStorage.setItem(MINTED_KEY, key);
-  emit();
-}
-
-export function peekMintedOpenRouterKey() {
-  return sessionStorage.getItem(MINTED_KEY);
-}
-
-export function takeMintedOpenRouterKey() {
-  const value = sessionStorage.getItem(MINTED_KEY);
-  sessionStorage.removeItem(MINTED_KEY);
-  emit();
-  return value;
 }
 
 export function openRouterStatus(

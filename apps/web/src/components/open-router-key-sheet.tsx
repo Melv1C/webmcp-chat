@@ -1,7 +1,3 @@
-import {
-  completeOpenRouterPkceIntoByok,
-  startOpenRouterPkceLogin,
-} from "@tanstack/ai-openrouter/pkce";
 import { useByok } from "@tanstack/ai-react";
 import { useEffect, useState, useSyncExternalStore } from "react";
 import { Button } from "@/components/ui/button";
@@ -15,11 +11,8 @@ import {
   openRouterLocked,
   openRouterMasked,
   openRouterStatus,
-  peekMintedOpenRouterKey,
-  stashMintedOpenRouterKey,
   subscribeKeySheet,
   subscribeOpenRouterServerKey,
-  takeMintedOpenRouterKey,
   openrouterByok,
 } from "@/lib/byok";
 
@@ -37,32 +30,6 @@ export function useOpenRouterServerKey() {
 
 export function useKeySheetOpen() {
   return useSyncExternalStore(subscribeKeySheet, isKeySheetOpen, () => false);
-}
-
-export function useCompleteOpenRouterPkce() {
-  useEffect(() => {
-    let cancelled = false;
-
-    void completeOpenRouterPkceIntoByok({
-      update: async (provider, key) => {
-        if (cancelled) {
-          return;
-        }
-        try {
-          await byok.update(provider, key);
-        } catch {
-          stashMintedOpenRouterKey(key);
-          openKeySheet();
-        }
-      },
-    }).catch(() => {
-      // No PKCE callback, or the session expired.
-    });
-
-    return () => {
-      cancelled = true;
-    };
-  }, []);
 }
 
 export function useOpenRouterKeyGate() {
@@ -128,10 +95,8 @@ export function OpenRouterKeySheet({ onSaved }: { onSaved?: () => void }) {
   const status = openRouterStatus(snapshot);
   const masked = openRouterMasked(status);
   const locked = openRouterLocked(snapshot, status);
-  const minted = peekMintedOpenRouterKey();
   const [draft, setDraft] = useState("");
   const [error, setError] = useState("");
-  const [signingIn, setSigningIn] = useState(false);
   const missingKey = snapshot.prompt?.reason === "missing";
   const storageMessage =
     snapshot.storageError ??
@@ -197,19 +162,14 @@ export function OpenRouterKeySheet({ onSaved }: { onSaved?: () => void }) {
     );
   }
 
-  const saveLabel = minted
-    ? "Save OpenRouter key"
-    : missingKey
-      ? "Replace key"
-      : "Save key";
+  const saveLabel = missingKey ? "Replace key" : "Save key";
 
   return (
     <form
       className="rounded-lg border bg-popover p-3 text-popover-foreground"
       onSubmit={(event) => {
         event.preventDefault();
-        const pending = takeMintedOpenRouterKey();
-        const next = (pending ?? draft).trim();
+        const next = draft.trim();
         if (!next) {
           return;
         }
@@ -218,9 +178,6 @@ export function OpenRouterKeySheet({ onSaved }: { onSaved?: () => void }) {
           .update(openrouterByok.id, next)
           .then(() => finishSave())
           .catch((caught: unknown) => {
-            if (pending) {
-              stashMintedOpenRouterKey(pending);
-            }
             setError(explainError(caught));
           });
       }}
@@ -233,44 +190,18 @@ export function OpenRouterKeySheet({ onSaved }: { onSaved?: () => void }) {
           ? "Replace it, then send again. The draft stays in the composer."
           : "Used only to talk to the model. It stays in this browser. The page that embedded the chat never sees it."}
       </p>
-      {minted ? (
-        <p className="mt-2 text-xs text-muted-foreground">
-          OpenRouter minted a key. Save it to keep it in this browser.
-        </p>
-      ) : (
-        <Input
-          type="password"
-          autoComplete="off"
-          value={draft}
-          placeholder={masked ? `Saved ${masked}` : "sk-or-v1-…"}
-          aria-label="OpenRouter API key"
-          className="mt-3 font-mono"
-          onChange={(event) => setDraft(event.target.value)}
-        />
-      )}
+      <Input
+        type="password"
+        autoComplete="off"
+        value={draft}
+        placeholder={masked ? `Saved ${masked}` : "sk-or-v1-…"}
+        aria-label="OpenRouter API key"
+        className="mt-3 font-mono"
+        onChange={(event) => setDraft(event.target.value)}
+      />
       <div className="mt-2.5 flex flex-col gap-1.5">
-        <Button type="submit" size="sm" disabled={!minted && !draft.trim()}>
+        <Button type="submit" size="sm" disabled={!draft.trim()}>
           {saveLabel}
-        </Button>
-        <Button
-          type="button"
-          size="sm"
-          variant="outline"
-          disabled={signingIn}
-          onClick={() => {
-            setSigningIn(true);
-            setError("");
-            const callback = new URL(location.href);
-            callback.searchParams.delete("code");
-            void startOpenRouterPkceLogin({ callbackUrl: callback.toString() }).catch(
-              (caught: unknown) => {
-                setSigningIn(false);
-                setError(explainError(caught));
-              },
-            );
-          }}
-        >
-          Sign in with OpenRouter
         </Button>
         {masked ? (
           <Button
