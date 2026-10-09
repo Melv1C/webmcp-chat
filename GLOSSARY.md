@@ -6,7 +6,7 @@ The page that embeds WebMCP Chat and makes page-specific tools available to it.
 
 ## Page tool
 
-An action that a host page makes available to an assistant for work in that page's context.
+An action the host page registers for the assistant. The chat widget discovers those tools; it does not own them.
 
 ## Chat widget
 

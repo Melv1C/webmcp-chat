@@ -1,6 +1,11 @@
-import type { AnyClientTool } from "@tanstack/ai-client";
+import type { AnyClientTool, WebMCPPageTool } from "@tanstack/ai-client";
 import {
-  createChatHook,
+  fetchServerSentEvents,
+  useChat,
+  usePageWebMCPTools,
+} from "@tanstack/ai-react";
+import {
+  createChatUI,
   type LayoutProps,
   type MessageProps,
   type PartProps,
@@ -45,19 +50,16 @@ import {
   MessageScrollerProvider,
   MessageScrollerViewport,
 } from "@/components/ui/message-scroller";
-import {
-  SUGGESTED_PROMPT,
-  demoConnection,
-  demoInitialMessages,
-  sendChatTurn,
-} from "@/lib/demo-chat";
-import { chatTools } from "@/lib/page-tool";
+import { SUGGESTED_PROMPT } from "@/lib/page-tool";
 
 export const chatOptions = {
-  connection: demoConnection,
-  tools: chatTools as readonly AnyClientTool[],
-  initialMessages: demoInitialMessages,
+  connection: fetchServerSentEvents("/api/chat"),
+  tools: [] as AnyClientTool[],
 };
+
+function isChatPageTool(tool: WebMCPPageTool) {
+  return tool.origin === location.origin && !tool.name.includes(".");
+}
 
 const streamingExtensions = [streamingMarkdownExtension()];
 
@@ -96,7 +98,11 @@ function ChatInput() {
   const canSend = input.trim().length > 0 && !chat.isLoading;
 
   function submit(text: string) {
-    sendChatTurn(chat, text);
+    const trimmed = text.trim();
+    if (!trimmed || chat.isLoading) {
+      return;
+    }
+    void chat.sendMessage(trimmed);
     setInput("");
   }
 
@@ -161,7 +167,7 @@ function ChatLayout({ Messages, Input }: LayoutProps<typeof chatOptions>) {
                       variant="outline"
                       size="sm"
                       disabled={chat.isLoading}
-                      onClick={() => sendChatTurn(chat, SUGGESTED_PROMPT)}
+                      onClick={() => void chat.sendMessage(SUGGESTED_PROMPT)}
                     >
                       {SUGGESTED_PROMPT}
                     </Button>
@@ -175,6 +181,11 @@ function ChatLayout({ Messages, Input }: LayoutProps<typeof chatOptions>) {
           <MessageScrollerButton />
         </MessageScroller>
       </MessageScrollerProvider>
+      {chat.error ? (
+        <p role="alert" className="px-3 pb-1 text-xs text-destructive">
+          {chat.error.message}
+        </p>
+      ) : null}
       <Input />
     </div>
   );
@@ -346,8 +357,7 @@ function anyToolComponents(
   });
 }
 
-export const { useAppChat, useChatContext } = createChatHook({
-  options: chatOptions,
+const chatUI = createChatUI(chatOptions, {
   components: {
     input: ChatInput,
     layout: ChatLayout,
@@ -360,3 +370,15 @@ export const { useAppChat, useChatContext } = createChatHook({
   },
   toolsComponents: anyToolComponents(ToolCall),
 });
+
+export function useAppChat() {
+  const pageTools = usePageWebMCPTools({ filter: isChatPageTool });
+  return useChat({
+    ...chatOptions,
+    tools: pageTools,
+  });
+}
+
+export const AppChat = chatUI.Chat;
+
+export const useChatContext = chatUI.useChatContext;

@@ -1,6 +1,6 @@
 import { MessageSquareIcon, PlusIcon, XIcon } from "lucide-react";
 import { useId, useRef, useState } from "react";
-import { useAppChat } from "@/components/chat-ui";
+import { AppChat, useAppChat } from "@/components/chat-ui";
 import { Button } from "@/components/ui/button";
 import {
   Tooltip,
@@ -62,7 +62,7 @@ function ChatPanel({
           <TooltipContent>Close</TooltipContent>
         </Tooltip>
       </header>
-      <chat.AppChat />
+      <AppChat chat={chat} />
     </div>
   );
 }

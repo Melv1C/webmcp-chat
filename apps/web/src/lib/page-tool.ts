@@ -1,18 +1,8 @@
 import { toolDefinition } from "@tanstack/ai";
+import { getWebMCPTools } from "@tanstack/ai-client";
 import { z } from "zod";
 
 export const SUGGESTED_PROMPT = "What can you do on this page?";
-
-export const PAGE_CONTEXT = {
-  title: "Untitled host page",
-  url: "https://localhost/",
-  tools: [
-    {
-      name: "getPageContext",
-      description: "Read the current page title, URL, and available tools.",
-    },
-  ],
-};
 
 export const getPageContextTool = toolDefinition({
   name: "getPageContext",
@@ -28,6 +18,16 @@ export const getPageContextTool = toolDefinition({
       }),
     ),
   }),
-}).client();
+}).client(async () => {
+  const tools = await getWebMCPTools();
+  return {
+    title: document.title || "Untitled host page",
+    url: location.href,
+    tools: tools.map((tool) => ({
+      name: tool.name,
+      description: tool.description,
+    })),
+  };
+});
 
-export const chatTools = [getPageContextTool];
+export const hostPageTools = [getPageContextTool];
