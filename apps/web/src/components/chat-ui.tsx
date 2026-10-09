@@ -23,6 +23,7 @@ import {
   createContext,
   useContext,
   useEffect,
+  useLayoutEffect,
   useRef,
   useState,
   type ComponentType,
@@ -51,6 +52,7 @@ import {
   MessageScrollerProvider,
   MessageScrollerViewport,
 } from "@/components/ui/message-scroller";
+import { PageToolsList, usePageToolsStore } from "@/components/page-tools";
 import { hostOrigin } from "@/lib/host-origin";
 
 const SUGGESTED_PROMPT = "What can you do on this page?";
@@ -97,9 +99,49 @@ function isToolRunning(state: string) {
 
 function ChatInput() {
   const chat = useChatContext();
+  const prefill = usePageToolsStore((state) => state.prefill);
   const composerRef = useRef<HTMLTextAreaElement>(null);
+  const selectionRef = useRef({ start: 0, end: 0 });
+  const pendingCaretRef = useRef<number | null>(null);
   const [input, setInput] = useState("");
   const canSend = input.trim().length > 0 && !chat.isLoading;
+  const prefillNonce = prefill.nonce;
+  const prefillText = prefill.text;
+
+  function rememberSelection(target: HTMLTextAreaElement) {
+    selectionRef.current = {
+      start: target.selectionStart,
+      end: target.selectionEnd,
+    };
+  }
+
+  useEffect(() => {
+    if (prefillNonce === 0) {
+      return;
+    }
+    const insert = prefillText;
+    setInput((current) => {
+      const start = Math.min(selectionRef.current.start, current.length);
+      const end = Math.min(selectionRef.current.end, current.length);
+      pendingCaretRef.current = start + insert.length;
+      return current.slice(0, start) + insert + current.slice(end);
+    });
+  }, [prefillNonce, prefillText]);
+
+  useLayoutEffect(() => {
+    const caret = pendingCaretRef.current;
+    if (caret == null) {
+      return;
+    }
+    pendingCaretRef.current = null;
+    const el = composerRef.current;
+    if (!el) {
+      return;
+    }
+    el.focus();
+    el.setSelectionRange(caret, caret);
+    selectionRef.current = { start: caret, end: caret };
+  }, [input]);
 
   function submit(text: string) {
     const trimmed = text.trim();
@@ -108,6 +150,7 @@ function ChatInput() {
     }
     void chat.sendMessage(trimmed);
     setInput("");
+    selectionRef.current = { start: 0, end: 0 };
   }
 
   return (
@@ -128,6 +171,8 @@ function ChatInput() {
           autoFocus
           className="min-h-10 max-h-32 py-2.5 field-sizing-content"
           onChange={(event) => setInput(event.target.value)}
+          onSelect={(event) => rememberSelection(event.currentTarget)}
+          onBlur={(event) => rememberSelection(event.currentTarget)}
           onKeyDown={(event) => {
             if (event.key === "Enter" && !event.shiftKey) {
               event.preventDefault();
@@ -153,38 +198,43 @@ function ChatInput() {
 
 function ChatLayout({ Messages, Input }: LayoutProps<typeof chatOptions>) {
   const chat = useChatContext();
+  const listOpen = usePageToolsStore((state) => state.listOpen);
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      <MessageScrollerProvider defaultScrollPosition="last-anchor">
-        <MessageScroller className="min-h-0 flex-1">
-          <MessageScrollerViewport aria-label="Conversation">
-            <MessageScrollerContent className="gap-3 px-3 py-3">
-              {chat.messages.length === 0 ? (
-                <MessageScrollerItem>
-                  <div className="flex flex-col items-start gap-3 pt-2">
-                    <p className="text-sm text-muted-foreground">
-                      Ask about this page.
-                    </p>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      disabled={chat.isLoading}
-                      onClick={() => void chat.sendMessage(SUGGESTED_PROMPT)}
-                    >
-                      {SUGGESTED_PROMPT}
-                    </Button>
-                  </div>
-                </MessageScrollerItem>
-              ) : (
-                <Messages />
-              )}
-            </MessageScrollerContent>
-          </MessageScrollerViewport>
-          <MessageScrollerButton />
-        </MessageScroller>
-      </MessageScrollerProvider>
+      {listOpen ? (
+        <PageToolsList />
+      ) : (
+        <MessageScrollerProvider defaultScrollPosition="last-anchor">
+          <MessageScroller className="min-h-0 flex-1">
+            <MessageScrollerViewport aria-label="Conversation">
+              <MessageScrollerContent className="gap-3 px-3 py-3">
+                {chat.messages.length === 0 ? (
+                  <MessageScrollerItem>
+                    <div className="flex flex-col items-start gap-3 pt-2">
+                      <p className="text-sm text-muted-foreground">
+                        Ask about this page.
+                      </p>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        disabled={chat.isLoading}
+                        onClick={() => void chat.sendMessage(SUGGESTED_PROMPT)}
+                      >
+                        {SUGGESTED_PROMPT}
+                      </Button>
+                    </div>
+                  </MessageScrollerItem>
+                ) : (
+                  <Messages />
+                )}
+              </MessageScrollerContent>
+            </MessageScrollerViewport>
+            <MessageScrollerButton />
+          </MessageScroller>
+        </MessageScrollerProvider>
+      )}
       {chat.error ? (
         <p role="alert" className="px-3 pb-1 text-xs text-destructive">
           {chat.error.message}
@@ -380,9 +430,10 @@ export const AppChat = chatUI.Chat;
 
 export function useAppChat(threadId: string) {
   const pageTools = usePageWebMCPTools({ filter: isChatPageTool });
-  return useChat({
+  const chat = useChat({
     ...chatOptions,
     threadId,
     tools: pageTools,
   });
+  return { chat, pageTools };
 }
