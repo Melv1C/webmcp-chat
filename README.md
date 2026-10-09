@@ -9,7 +9,7 @@ A Bun workspace monorepo with a React/Vite web app and a Hono API. The web app i
 - React and TypeScript in `apps/web`
 - Tailwind CSS 4 and shadcn/ui in `apps/web`
 - Hono on Bun in `apps/api`
-- TanStack AI is deferred until the chat feature is started
+- TanStack AI Chat UI (`createChatHook`) plus the shadcn helper drive a mock floating chat widget in `apps/web`
 
 Vite+ needs Node.js 22.18 or newer for its local CLI. Bun runs the API and manages workspace packages.
 

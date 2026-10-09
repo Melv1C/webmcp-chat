@@ -144,3 +144,107 @@ body {
     @apply font-sans;
   }
 }
+
+@keyframes shimmer {
+  0% {
+    background-position: 100% center;
+  }
+  100% {
+    background-position: -100% center;
+  }
+}
+
+@utility shimmer {
+  background-image: linear-gradient(
+    90deg,
+    var(--muted-foreground) 40%,
+    var(--foreground) 50%,
+    var(--muted-foreground) 60%
+  );
+  background-size: 220% 100%;
+  background-clip: text;
+  color: transparent;
+  animation: shimmer 1.4s linear infinite;
+}
+
+@layer components {
+  [data-slot="chat-markdown"] {
+    @apply min-w-0 text-sm leading-relaxed;
+  }
+
+  [data-slot="chat-markdown"] > :first-child {
+    @apply mt-0;
+  }
+
+  [data-slot="chat-markdown"] > :last-child {
+    @apply mb-0;
+  }
+
+  [data-slot="chat-markdown"] p {
+    @apply my-2;
+  }
+
+  [data-slot="chat-markdown"] strong {
+    @apply font-semibold;
+  }
+
+  [data-slot="chat-markdown"] a {
+    @apply text-foreground underline underline-offset-3;
+  }
+
+  [data-slot="chat-markdown"] ul {
+    @apply my-2 list-disc pl-5;
+  }
+
+  [data-slot="chat-markdown"] ol {
+    @apply my-2 list-decimal pl-5;
+  }
+
+  [data-slot="chat-markdown"] li {
+    @apply my-0.5;
+  }
+
+  [data-slot="chat-markdown"] blockquote {
+    @apply my-2 border-l-2 border-border pl-3 text-muted-foreground;
+  }
+
+  [data-slot="chat-markdown"] hr {
+    @apply my-3 border-border;
+  }
+
+  [data-slot="chat-markdown"] :is(h1, h2, h3, h4) {
+    @apply mt-3 mb-1.5 font-semibold;
+  }
+
+  [data-slot="chat-markdown"] h1 {
+    @apply text-base;
+  }
+
+  [data-slot="chat-markdown"] :is(h2, h3, h4) {
+    @apply text-sm;
+  }
+
+  [data-slot="chat-markdown"] code {
+    @apply rounded-sm bg-muted px-1 py-0.5 font-mono text-[0.85em];
+  }
+
+  [data-slot="chat-markdown"] pre {
+    @apply my-2 overflow-x-auto rounded-md border bg-muted/40 p-2.5;
+  }
+
+  [data-slot="chat-markdown"] pre code {
+    @apply bg-transparent p-0 text-xs;
+  }
+
+  [data-slot="chat-markdown"] table {
+    @apply my-2 w-full text-xs;
+  }
+
+  [data-slot="chat-markdown"] :is(th, td) {
+    @apply border-b px-2 py-1 text-left;
+  }
+
+  [data-slot="chat-markdown"] th {
+    @apply font-medium;
+  }
+}
